@@ -7,6 +7,10 @@ class Cliente:
         self._endereco = endereco
         self._contas = contas
 
+    @property
+    def contas(self):
+        return self._contas
+
     # As operações de saque e deposito serão feitas inicialmente a partir deste método
     def realizar_transacao(self, conta, transacao):
         if type(transacao) == Saque:
@@ -29,6 +33,10 @@ class PessoaFisica(Cliente):
         self._cpf = cpf
         self._nome = nome
         self._data_nascimento = data_nascimento
+
+    @property
+    def contas(self):
+        return self._contas
 
     @property
     def nome(self):
@@ -59,6 +67,10 @@ class Conta:
         self._agencia = '0001'
         self._cliente = cliente
         self._historico = Historico()
+
+    @property
+    def numero(self):
+        return self._numero
 
     @property
     def saldo(self):
@@ -99,6 +111,10 @@ class ContaCorrente(Conta):
         super().__init__(saldo, numero, cliente)
         self._limite = 0
         self._limite_saques = 1000
+
+    @property
+    def numero(self):
+        return self._numero
 
     def sacar(self, valor):
         if (self._limite + valor) <= self._limite_saques:
