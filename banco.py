@@ -51,9 +51,9 @@ class Historico:
         agora_formatado = agora.strftime("%d/%m/%Y %H:%M")
         valor = transacao.valor
         if type(transacao) == Saque:
-            self._historico += f"Operação: Saque no valor de R${valor} - Realizado em: {agora_formatado}"
+            self._historico += f"-R${valor}. {agora_formatado}\n"
         elif type(transacao) == Deposito:
-            self._historico += f"Operação: Deposito no valor de R${valor} - Realizado em {agora_formatado}"
+            self._historico += f"+R${valor}. {agora_formatado}\n"
         else:
             print('Erro: Transação Inválida')
 
@@ -100,7 +100,7 @@ class Conta:
 
     # retorna uma string que se refere aos dados da conta
     def __str__(self):
-        return f'''saldo: {self.saldo}
+        return f'''saldo: R${self.saldo}
         numero: {self._numero}
         agencia: {self._agencia}
         cliente: {self._cliente.nome}
@@ -110,21 +110,25 @@ class ContaCorrente(Conta):
     def __init__(self, saldo=0, numero=0, cliente=None):
         super().__init__(saldo, numero, cliente)
         self._limite = 0
-        self._limite_saques = 1000
+        self._limite_saques = 3
 
     @property
     def numero(self):
         return self._numero
+    
+    @property
+    def historico(self):
+        return self._historico
 
     def sacar(self, valor):
-        if (self._limite + valor) <= self._limite_saques:
+        if self._limite < self._limite_saques:
             self._saldo -= valor
             saque = Saque(valor)
             self._historico.adicionar_transacao(saque)
-            self._limite += valor
+            self._limite += 1
             return True
         else:
-            print(f"Limite de saques ultapassado. O limite total de saques é {self._limite_saques}\n já foi sacado R${self._limite}")
+            print(f"Limite de saques ultapassado. O limite total de saques é {self._limite_saques}\n")
 
 
 

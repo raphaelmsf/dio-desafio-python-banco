@@ -4,12 +4,8 @@ from banco import *
 import textwrap
 
 
-conta_atual= ''
-usuario_atual = ''
-usuarios = []
-contas = []
 
-def menu():
+def menu(usuario, conta):
     # menu = """\n
     # ================ MENU ================
     # [d]\tDepositar
@@ -23,37 +19,40 @@ def menu():
     # => """
 
 
-    if usuario_atual == '' and conta_atual == '':
+    if usuario == '' and conta == '':
       menu = f"""\n
     ================ MENU ================
     Nenhum usuário foi selecionado, gostaria de selecionar um ou criar um novo?
 
     [nu]\tNovo usuário
     [sel]\tSelecionar usuário
+
     [q]\tSair
     => """
-    elif conta_atual == '' and usuario_atual != '':
+    elif conta == '' and usuario != '':
       menu = f"""\n
     ================ MENU ================
-    Olá {usuario_atual.nome}! Gostaria de selecionar uma conta existente ou criar uma nova?
+    Olá {usuario.nome}! Gostaria de selecionar uma conta existente ou criar uma nova?
 
 
     [nc]\tNova conta
-    [lc]\tSelecionar conta
-    [q]\tSair
+    [sc]\tSelecionar conta
+    [qu]\tSair do usuário
+
+    [q]\tSair do Sistema
     => """
 
-    elif conta_atual != '':
+    elif conta != '':
       menu = f"""\n
     ================ MENU ================
     conta:
-     {str(conta_atual)}
+     {str(conta)}
 
     [d]\tDepositar
     [s]\tSacar
-    [h]\tExibir Histórico
+    [qc]\tSair da conta
 
-    [q]\tSair
+    [q]\tSair do Sistema
     => """
 
     else:
@@ -62,10 +61,9 @@ def menu():
 
     return input(textwrap.dedent(menu))
 
-def novo_usuario(nome, cpf, data_nascimento, endereco):
-  if cpf not in [usuario._cpf for usuario in usuarios]:
+def novo_usuario(nome, cpf, data_nascimento, endereco, lista_usuarios):
+  if cpf not in [usuario._cpf for usuario in lista_usuarios]:
     usuario = PessoaFisica(nome=nome, cpf=cpf, data_nascimento=data_nascimento, endereco=endereco)
-    usuarios.append(usuario)
     print(f'Usuário {usuario.nome} criado com sucesso.')
     return usuario
   else:
@@ -85,11 +83,10 @@ def selecionar_usuario(usuarios):
 
   return int(input(menu_nomes))
 
-def criar_conta(usuario):
-  numero = len(contas) + 1
+def criar_conta(usuario, lista_contas):
+  numero = len(lista_contas) + 1
   conta = ContaCorrente.nova_conta(usuario, numero)
   print("Conta criada com sucesso\n ")
-  print(conta)
   return conta
 
 def selecionar_conta(usuario):
@@ -103,8 +100,9 @@ def selecionar_conta(usuario):
             numero = str(numero)
             numero_conta = conta.numero
             menu_contas += '\n[{}] conta {} tipo: Corrente \n'.format(numero, numero_conta)
-        menu_contas = input(menu_contas)
-    return menu_contas
+    else:
+       menu_contas= "Não há contas para este usuário, digite qualquer caractere e aperte enter para voltar"
+    return input(menu_contas)
 
 def depositar(usuario, conta, valor):
    deposito = Deposito(valor)
@@ -114,4 +112,65 @@ def sacar(usuario, conta, valor):
    saque = Saque(valor)
    usuario.realizar_transacao(conta, saque)
 
+def main():
+   conta_atual= ''
+   usuario_atual = ''
+   usuarios = []
+   contas = []
+   while True:
+      opcao = menu(usuario_atual, conta_atual)
 
+      if opcao == 'nu':
+         print("Certo! Vamos precisar de alguns dados")
+         nome = input("Digite o nome do usuário: ")
+         cpf = input("Digite o cpf do usuário: ")
+         data_nascimento = input("Digite a data de nascimento do usuário: ")
+         endereco = input("Digite o endereco do usuário: ")
+         usuario = novo_usuario(nome, cpf, data_nascimento, endereco, usuarios)
+         usuarios.append(usuario)
+         usuario_atual = usuario
+      elif opcao == 'sel':
+         numero = selecionar_usuario(usuarios)
+         index_usuario = int(numero) - 1
+         usuario_atual = usuarios[index_usuario]
+      elif opcao == 'nc':
+         conta = criar_conta(usuario_atual, contas)
+         contas.append(conta)
+         conta_atual = conta
+      elif opcao == 'sc':
+         if len(usuario_atual.contas) > 0:
+          numero = selecionar_conta(usuario_atual)
+          index_conta = int(numero) - 1
+          conta_atual = usuario_atual.contas[index_conta]
+         else:
+            print("Não há contas para selecionar")
+      elif opcao == 'd':
+         menu_deposito = f"Saldo disponível: {conta_atual.saldo}\n Quanto deseja depositar? "
+         valor = float(input(menu_deposito))
+         depositar(usuario_atual, conta_atual, valor)
+         print("Depósito realizado com sucesso")
+      elif opcao == 's':
+         if conta_atual._limite < conta_atual._limite_saques:
+          menu_saque = f"Saldo disponível: {conta_atual.saldo}\n Quanto deseja sacar? "
+          valor = float(input(menu_saque))
+          if valor <= conta_atual.saldo:
+            sacar(usuario_atual, conta_atual, valor)
+            print("Saque realizado com sucesso")
+          else:
+            print("Erro! Saldo insuficiente")
+         else:
+            print("Limite de saques atingido")
+      elif opcao == 'q':
+         break
+      elif opcao == 'qc':
+         conta_atual = ''
+      elif opcao == 'qu':
+         usuario_atual = ''
+      else:
+         print("Selecione uma opção válida")
+        
+          
+        
+            
+
+main()
